@@ -1,3 +1,16 @@
+/** Roles del panel (inglés, persistidos en Firestore). */
+export type CommerceMemberRole = "owner" | "reception" | "provider";
+
+export interface CommerceMember {
+  id: string;
+  userId: string;
+  commerceId: string;
+  role: CommerceMemberRole;
+  /** Obligatorio si `role === "provider"` */
+  staffId?: string;
+  createdAt: Date;
+}
+
 export interface Commerce {
   id: string;
   slug: string;
@@ -34,6 +47,18 @@ export interface Break {
   end: string;
 }
 
+export interface Customer {
+  id: string;
+  commerceId: string;
+  name: string;
+  phone: string;
+  email: string;
+  /** Para deduplicar consultas; igual a `email` normalizado. */
+  emailLowercase: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface Service {
   id: string;
   commerceId: string;
@@ -47,10 +72,14 @@ export interface Service {
 export interface Staff {
   id: string;
   commerceId: string;
+  /** Único por comercio; usado en URL pública `/book/{commerce}/{staffSlug}`. */
+  slug: string;
   name: string;
   active: boolean;
   servicesIds: string[];
   workingHours?: WorkingHours;
+  /** Opcional: vincular cuenta Auth para rol `provider`. */
+  userId?: string;
   createdAt: Date;
 }
 
@@ -59,10 +88,14 @@ export interface Appointment {
   commerceId: string;
   serviceId: string;
   staffId: string;
+  /** Presente en reservas creadas por API pública. */
+  customerId?: string;
   start: Date;
   end: Date;
   customerName: string;
+  /** Teléfono de contacto */
   contact: string;
+  customerEmail?: string;
   status: 'confirmed' | 'cancelled' | 'no_show';
   createdAt: Date;
 }

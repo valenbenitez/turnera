@@ -1,0 +1,57 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function memberDocId(commerceId) {
+      return request.auth.uid + '_' + commerceId;
+    }
+
+    function hasCommerceAccess(commerceId) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/commerce_members/$(memberDocId(commerceId)));
+    }
+
+    match /commerce_members/{memberId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
+    match /commerces/{commerceId} {
+      allow get: if hasCommerceAccess(commerceId);
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    // Catálogo: lectura para miembros del comercio; escritura solo Admin (API).
+    match /services/{serviceId} {
+      allow read: if isSignedIn()
+        && resource.data.commerceId is string
+        && hasCommerceAccess(resource.data.commerceId);
+      allow create, update, delete: if false;
+    }
+
+    match /staff/{staffId} {
+      allow read: if isSignedIn()
+        && resource.data.commerceId is string
+        && hasCommerceAccess(resource.data.commerceId);
+      allow create, update, delete: if false;
+    }
+
+    match /appointments/{appointmentId} {
+      allow read, write: if false;
+    }
+
+    match /customers/{customerId} {
+      allow read, write: if false;
+    }
+
+    match /booking_tokens/{tokenId} {
+      allow read, write: if false;
+    }
+  }
+}
