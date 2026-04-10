@@ -34,6 +34,10 @@ yarn-error.log*
 .env*
 !.env.example
 
+# Firebase Admin — JSON del service account (usar secrets/ + FIREBASE_SERVICE_ACCOUNT_PATH)
+secrets/*
+!secrets/.gitkeep
+
 # vercel
 .vercel
 

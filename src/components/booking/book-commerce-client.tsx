@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { DateTime } from "luxon";
 
+import { BookingMonthCalendar } from "@/components/booking/booking-month-calendar";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -143,6 +144,11 @@ export function BookCommerceClient({
   }, [ctx]);
 
   useEffect(() => {
+    if (!staffOk || !dateBounds.min || dateStr) return;
+    setDateStr(dateBounds.min);
+  }, [staffOk, dateBounds.min, dateStr]);
+
+  useEffect(() => {
     if (!ctx || !staffOk || !dateStr) {
       setSlots([]);
       setSelectedSlotIso("");
@@ -240,8 +246,8 @@ export function BookCommerceClient({
 
   if (services.length === 0) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-8">
-        <h1 className="text-xl font-semibold tracking-tight">Reservar turno</h1>
+      <div className="mx-auto w-full min-w-0 max-w-3xl px-2 py-10 sm:px-5 md:px-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Reservar turno</h1>
         <p className="mt-4 text-sm text-muted-foreground">
           Este comercio aún no tiene servicios activos para reservar online.
         </p>
@@ -251,15 +257,23 @@ export function BookCommerceClient({
 
   const staffLocked = Boolean(initialStaffSlug) && staffOk;
 
+  const glassCard =
+    "w-full rounded-2xl border border-slate-200/80 bg-white/92 shadow-[0_12px_40px_-12px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-zinc-800/90 dark:bg-zinc-950/82 dark:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.45)]";
+
   return (
-    <div className="mx-auto min-h-full max-w-lg space-y-6 px-4 py-8">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight">Reservar turno</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{commerce.name}</p>
-      </div>
+    <div className="mx-auto min-h-full w-full min-w-0 max-w-3xl space-y-6 px-2 py-10 pb-16 sm:px-5 md:px-8">
+      <header className="booking-fade-in space-y-1 text-center sm:text-left">
+        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+          Reservá online
+        </p>
+        <h1 className="text-balance text-2xl font-semibold tracking-tight sm:text-3xl">
+          Reservar turno
+        </h1>
+        <p className="text-sm text-muted-foreground">{commerce.name}</p>
+      </header>
 
       {done ? (
-        <Card>
+        <Card className={cn(glassCard, "booking-fade-in")}>
           <CardHeader>
             <CardTitle>Turno confirmado</CardTitle>
             <CardDescription>
@@ -290,8 +304,8 @@ export function BookCommerceClient({
           </CardFooter>
         </Card>
       ) : (
-        <form onSubmit={onSubmit} className="space-y-6">
-          <Card>
+        <form onSubmit={onSubmit} className="booking-stack space-y-5">
+          <Card className={glassCard}>
             <CardHeader>
               <CardTitle className="text-base">1. Servicio</CardTitle>
             </CardHeader>
@@ -300,7 +314,7 @@ export function BookCommerceClient({
                 <FieldLabel htmlFor="book-service">Elegí un servicio</FieldLabel>
                 <select
                   id="book-service"
-                  className="flex h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                  className="flex h-10 w-full rounded-xl border border-slate-200/90 bg-white/95 px-3 text-sm outline-none shadow-sm transition focus-visible:border-primary/45 focus-visible:ring-2 focus-visible:ring-primary/20 dark:border-zinc-700 dark:bg-zinc-900/70"
                   value={serviceId}
                   onChange={(e) => {
                     setServiceId(e.target.value);
@@ -321,7 +335,7 @@ export function BookCommerceClient({
           </Card>
 
           {showStaffStep ? (
-            <Card>
+            <Card className={glassCard}>
               <CardHeader>
                 <CardTitle className="text-base">2. Prestador</CardTitle>
               </CardHeader>
@@ -330,7 +344,7 @@ export function BookCommerceClient({
                   <FieldLabel htmlFor="book-staff">Quién te atiende</FieldLabel>
                   <select
                     id="book-staff"
-                    className="flex h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                    className="flex h-10 w-full rounded-xl border border-slate-200/90 bg-white/95 px-3 text-sm outline-none shadow-sm transition focus-visible:border-primary/45 focus-visible:ring-2 focus-visible:ring-primary/20 dark:border-zinc-700 dark:bg-zinc-900/70"
                     value={staffId}
                     onChange={(e) => setStaffId(e.target.value)}
                     required
@@ -363,33 +377,45 @@ export function BookCommerceClient({
           ) : null}
 
           {serviceId && staffOk ? (
-            <Card>
+            <Card className={glassCard}>
               <CardHeader>
                 <CardTitle className="text-base">Día</CardTitle>
+                <CardDescription>
+                  Elegí una fecha disponible en el calendario.
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <Field>
-                  <FieldLabel htmlFor="book-date">Fecha</FieldLabel>
-                  <Input
-                    id="book-date"
-                    type="date"
-                    min={dateBounds.min}
-                    max={dateBounds.max}
+              <CardContent className="space-y-3">
+                {dateBounds.min && dateBounds.max ? (
+                  <BookingMonthCalendar
+                    timezone={commerce.timezone}
+                    minDate={dateBounds.min}
+                    maxDate={dateBounds.max}
                     value={dateStr}
-                    onChange={(e) => setDateStr(e.target.value)}
-                    required
+                    onChange={setDateStr}
                   />
-                </Field>
+                ) : null}
+                {dateStr ? (
+                  <p className="text-center text-xs text-muted-foreground sm:text-left">
+                    Seleccionado:{" "}
+                    <span className="font-medium text-foreground">
+                      {DateTime.fromFormat(dateStr, "yyyy-MM-dd", {
+                        zone: commerce.timezone,
+                      })
+                        .setLocale("es")
+                        .toFormat("EEEE d 'de' LLLL")}
+                    </span>
+                  </p>
+                ) : null}
               </CardContent>
             </Card>
           ) : null}
 
           {serviceId && staffOk && dateStr ? (
-            <Card>
+            <Card className={glassCard}>
               <CardHeader>
                 <CardTitle className="text-base">Horario</CardTitle>
                 <CardDescription>
-                  Horarios en zona {commerce.timezone}
+                  Zona horaria: {commerce.timezone}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -414,10 +440,10 @@ export function BookCommerceClient({
                           type="button"
                           onClick={() => setSelectedSlotIso(iso)}
                           className={cn(
-                            "rounded-lg border px-2 py-2 text-sm font-medium transition-colors",
+                            "rounded-xl border px-2 py-2.5 text-sm font-medium transition-all duration-200",
                             active
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-border bg-background hover:bg-muted"
+                              ? "scale-[1.02] border-primary/40 bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                              : "border-slate-200/80 bg-white/90 shadow-sm hover:scale-[1.02] hover:border-primary/35 hover:bg-white dark:border-zinc-700 dark:bg-zinc-900/65 dark:hover:bg-zinc-800/75"
                           )}
                         >
                           {label}
@@ -431,7 +457,7 @@ export function BookCommerceClient({
           ) : null}
 
           {selectedSlotIso ? (
-            <Card>
+            <Card className={glassCard}>
               <CardHeader>
                 <CardTitle className="text-base">Tus datos</CardTitle>
                 <CardDescription>

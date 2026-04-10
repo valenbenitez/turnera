@@ -223,6 +223,7 @@ export function CommerceSettingsForm({ commerceId }: Props) {
         </div>
         <Link
           href={`/book/${slug}`}
+          data-tour="tour-public-book"
           className={cn(
             buttonVariants({ variant: "secondary", size: "sm" }),
             "w-full shrink-0 sm:w-auto"
@@ -233,7 +234,7 @@ export function CommerceSettingsForm({ commerceId }: Props) {
       </div>
 
       <form onSubmit={onSubmit} className="space-y-8">
-        <Card>
+        <Card data-tour="tour-general">
           <CardHeader>
             <CardTitle>General</CardTitle>
             <CardDescription>Nombre, URL y visibilidad.</CardDescription>
@@ -286,7 +287,7 @@ export function CommerceSettingsForm({ commerceId }: Props) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-tour="tour-contact">
           <CardHeader>
             <CardTitle>Contacto y agenda</CardTitle>
             <CardDescription>
@@ -374,7 +375,7 @@ export function CommerceSettingsForm({ commerceId }: Props) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-tour="tour-hours">
           <CardHeader>
             <CardTitle>Horario del comercio</CardTitle>
             <CardDescription>
@@ -441,7 +442,12 @@ export function CommerceSettingsForm({ commerceId }: Props) {
             ) : (
               <span />
             )}
-            <Button type="submit" disabled={saving} className="w-full sm:w-auto">
+            <Button
+              type="submit"
+              disabled={saving}
+              className="w-full sm:w-auto"
+              data-tour="tour-save"
+            >
               {saving ? "Guardando…" : "Guardar cambios"}
             </Button>
           </CardFooter>

@@ -84,7 +84,8 @@ export function parseDaySchedule(raw: unknown): DaySchedule | null {
     enabled,
     start: start || "09:00",
     end: end || "18:00",
-    breaks: breaks.length ? breaks : undefined,
+    /** Firestore no acepta `undefined` en documentos; `[]` equivale a “sin descansos”. */
+    breaks,
   };
 }
 

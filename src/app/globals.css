@@ -128,3 +128,139 @@
     @apply font-sans;
   }
 }
+
+/*
+ * Reserva pública: clase en <html> (inyectada por BookingPageChrome).
+ * Hex + oklch: los hex se ven en todos los navegadores; oklch refina donde hay soporte.
+ */
+html.public-booking-page {
+  min-height: 100dvh;
+  min-height: 100svh;
+  min-height: -webkit-fill-available;
+  /* Neutro frío B2B: contraste claro con cards blancas, sin pastel llamativo */
+  background-color: #e1e6ee;
+  background-image:
+    linear-gradient(
+      168deg,
+      #d5dce6 0%,
+      #dfe5ee 34%,
+      #e8edf4 68%,
+      #f0f3f9 100%
+    ),
+    radial-gradient(
+      ellipse 100% 68% at 50% -10%,
+      rgba(71, 85, 105, 0.14) 0%,
+      transparent 54%
+    ),
+    radial-gradient(
+      ellipse 78% 52% at 100% 38%,
+      rgba(100, 116, 139, 0.11) 0%,
+      transparent 50%
+    );
+}
+
+html.public-booking-page body {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+html.dark.public-booking-page {
+  background-color: #0b0e13;
+  background-image:
+    linear-gradient(
+      168deg,
+      #0e1218 0%,
+      #121820 42%,
+      #0b0e13 100%
+    ),
+    radial-gradient(
+      ellipse 100% 68% at 50% -10%,
+      rgba(148, 163, 184, 0.12) 0%,
+      transparent 52%
+    ),
+    radial-gradient(
+      ellipse 72% 48% at 100% 40%,
+      rgba(71, 85, 105, 0.18) 0%,
+      transparent 48%
+    );
+}
+
+@supports (background: linear-gradient(in oklch, red, blue)) {
+  html.public-booking-page {
+    background-color: oklch(0.92 0.018 252);
+    background-image:
+      linear-gradient(
+        168deg,
+        oklch(0.88 0.022 252) 0%,
+        oklch(0.91 0.018 250) 38%,
+        oklch(0.94 0.012 248) 100%
+      ),
+      radial-gradient(
+        ellipse 96% 70% at 50% -12%,
+        oklch(0.72 0.04 252 / 0.22) 0%,
+        transparent 55%
+      ),
+      radial-gradient(
+        ellipse 74% 54% at 100% 36%,
+        oklch(0.78 0.03 250 / 0.16) 0%,
+        transparent 50%
+      );
+  }
+}
+
+/* Contenedor del contenido (encima del fondo del html) */
+.public-booking-root {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 100dvh;
+  min-height: 100svh;
+  min-height: -webkit-fill-available;
+  flex: 1 1 auto;
+}
+
+@keyframes booking-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.booking-fade-in {
+  animation: booking-fade-up 0.5s ease-out both;
+}
+
+.booking-stack > * {
+  animation: booking-fade-up 0.45s ease-out both;
+}
+.booking-stack > *:nth-child(1) {
+  animation-delay: 0.04s;
+}
+.booking-stack > *:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.booking-stack > *:nth-child(3) {
+  animation-delay: 0.16s;
+}
+.booking-stack > *:nth-child(4) {
+  animation-delay: 0.22s;
+}
+.booking-stack > *:nth-child(5) {
+  animation-delay: 0.28s;
+}
+
+[data-tour-highlight="true"] {
+  position: relative;
+  z-index: 150 !important;
+  outline: 3px solid var(--primary);
+  outline-offset: 4px;
+  border-radius: 12px;
+  transition: outline-offset 0.2s ease;
+}

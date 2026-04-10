@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
-import { getAuth } from "firebase-admin/auth";
 
 import { createNewCommerceFields } from "@/lib/commerce-defaults";
 import { commerceMemberDocId } from "@/lib/commerce-member-id";
 import { getAdminApp } from "@/lib/firebase/admin";
+import { requireBearerUid } from "@/lib/server/firebase-bearer-auth";
 import {
   isValidCommerceSlug,
   normalizeCommerceSlug,
@@ -17,21 +17,9 @@ function jsonError(message: string, status: number) {
 }
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return jsonError("No autorizado", 401);
-  }
-
-  const token = authHeader.slice(7);
-
-  let uid: string;
-  try {
-    const adminAuth = getAuth(getAdminApp());
-    const decoded = await adminAuth.verifyIdToken(token);
-    uid = decoded.uid;
-  } catch {
-    return jsonError("Token inválido", 401);
-  }
+  const uidOrRes = await requireBearerUid(request);
+  if (uidOrRes instanceof NextResponse) return uidOrRes;
+  const uid = uidOrRes;
 
   let body: unknown;
   try {

@@ -1,3 +1,27 @@
+/**
+ * Perfil del usuario del panel (Firestore `users/{uid}`).
+ * La identidad de acceso sigue en Firebase Auth; acá va lo editable y preferencias.
+ */
+export interface UserPreferences {
+  /** p. ej. "es", "en" */
+  locale?: string;
+  /** Resumen por email (futuro) */
+  emailDigest?: boolean;
+  /** Extensible sin migración de tipos para claves nuevas */
+  [key: string]: unknown;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  displayName: string | null;
+  phone: string | null;
+  photoURL: string | null;
+  preferences: UserPreferences;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 /** Roles del panel (inglés, persistidos en Firestore). */
 export type CommerceMemberRole = "owner" | "reception" | "provider";
 

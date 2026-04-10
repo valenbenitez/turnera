@@ -30,6 +30,5 @@ export function createNewCommerceFields(input: {
     slotDurationMinutes: 30,
     maxDaysInAdvance: 30,
     minHoursBeforeBooking: 2,
-    whatsappNumber: undefined,
   };
 }

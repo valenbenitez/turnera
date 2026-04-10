@@ -29,9 +29,11 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} min-h-dvh min-h-svh h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="flex min-h-dvh min-h-svh min-h-[-webkit-fill-available] flex-col">
+        {children}
+      </body>
     </html>
   );
 }

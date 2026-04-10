@@ -16,6 +16,12 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/commerce_members/$(memberDocId(commerceId)));
     }
 
+    match /users/{userId} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow create, update: if isSignedIn() && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
     match /commerce_members/{memberId} {
       allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
       allow create, update, delete: if false;

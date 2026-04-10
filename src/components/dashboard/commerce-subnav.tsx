@@ -9,23 +9,31 @@ import { buttonVariants } from "@/components/ui/button";
 type Props = { commerceId: string };
 
 const tabs = [
-  { href: (id: string) => `/dashboard/${id}`, label: "Ajustes", match: "exact" as const },
   {
     href: (id: string) => `/dashboard/${id}/agenda`,
     label: "Agenda",
     match: "prefix" as const,
+    tour: "tour-nav-agenda",
+  },
+  {
+    href: (id: string) => `/dashboard/${id}`,
+    label: "Ajustes",
+    match: "exact" as const,
+    tour: "tour-nav-settings",
   },
   {
     href: (id: string) => `/dashboard/${id}/services`,
     label: "Servicios",
     match: "prefix" as const,
+    tour: "tour-nav-services",
   },
   {
     href: (id: string) => `/dashboard/${id}/staff`,
     label: "Equipo",
     match: "prefix" as const,
+    tour: "tour-nav-staff",
   },
-];
+] as const;
 
 export function CommerceSubnav({ commerceId }: Props) {
   const pathname = usePathname();
@@ -46,6 +54,7 @@ export function CommerceSubnav({ commerceId }: Props) {
             <Link
               key={tab.label}
               href={href}
+              data-tour={tab.tour}
               className={cn(
                 buttonVariants({
                   variant: active ? "secondary" : "ghost",

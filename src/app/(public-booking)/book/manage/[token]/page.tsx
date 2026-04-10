@@ -8,7 +8,7 @@ export default async function ManageAppointmentPage({ params }: PageProps) {
   const { token } = await params;
 
   return (
-    <div className="mx-auto min-h-full max-w-lg px-4 py-8">
+    <div className="mx-auto min-h-full w-full min-w-0 max-w-3xl px-2 py-8 sm:px-5 md:px-8">
       <ManageBookingClient token={token} />
     </div>
   );

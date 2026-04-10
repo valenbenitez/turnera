@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -33,6 +34,7 @@ type Row = { commerce: Commerce; role: CommerceMemberRole };
 
 export function DashboardHome() {
   const { user } = useAuth();
+  const router = useRouter();
   const [rows, setRows] = useState<Row[]>([]);
   const [listError, setListError] = useState<string | null>(null);
   const [loadingList, setLoadingList] = useState(true);
@@ -87,7 +89,7 @@ export function DashboardHome() {
 
     setCreating(true);
     try {
-      const token = await user.getIdToken();
+      const token = await user.getIdToken(true);
       const res = await fetch("/api/commerces", {
         method: "POST",
         headers: {
@@ -96,7 +98,10 @@ export function DashboardHome() {
         },
         body: JSON.stringify({ name: n, slug: s }),
       });
-      const data = (await res.json()) as { error?: string };
+      const data = (await res.json()) as {
+        error?: string;
+        commerceId?: string;
+      };
       if (!res.ok) {
         setCreateError(data.error || "No se pudo crear el comercio.");
         return;
@@ -104,6 +109,9 @@ export function DashboardHome() {
       setName("");
       setSlug("");
       await refresh();
+      if (data.commerceId) {
+        router.push(`/dashboard/${data.commerceId}?onboarding=1`);
+      }
     } catch {
       setCreateError("Error de red. Intentá de nuevo.");
     } finally {
@@ -205,7 +213,7 @@ export function DashboardHome() {
                       Rol: {role}
                     </span>
                     <Link
-                      href={`/dashboard/${commerce.id}`}
+                      href={`/dashboard/${commerce.id}/agenda`}
                       className={cn(
                         buttonVariants({ variant: "secondary", size: "sm" }),
                         "ml-auto"

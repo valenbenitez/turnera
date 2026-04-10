@@ -12,6 +12,7 @@ import type { User } from "firebase/auth";
 import { onAuthStateChanged } from "firebase/auth";
 
 import { auth } from "@/lib/firebase/auth-client";
+import { ensureUserProfile } from "@/lib/firebase/user-profile";
 
 type AuthState = {
   user: User | null;
@@ -28,6 +29,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);
+      if (u) {
+        void ensureUserProfile(u).catch((err) => {
+          console.error("[ensureUserProfile]", err);
+        });
+      }
     });
     return () => unsub();
   }, []);
