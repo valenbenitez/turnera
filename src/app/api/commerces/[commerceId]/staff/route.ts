@@ -13,6 +13,10 @@ import {
   jsonError,
   requireCatalogManager,
 } from "@/lib/server/catalog-auth";
+import {
+  enqueueUpsertProviderMembership,
+  validateTargetUserCanBeProvider,
+} from "@/lib/server/sync-staff-provider-membership";
 import { verifyServiceIdsBelongToCommerce } from "@/lib/server/verify-services-in-commerce";
 import { getAdminApp } from "@/lib/firebase/admin";
 
@@ -95,7 +99,30 @@ export async function POST(request: NextRequest, context: RouteContext) {
     payload.userId = userResult.value;
   }
 
-  await ref.set(payload);
+  if (userResult.value) {
+    const linkErr = await validateTargetUserCanBeProvider(
+      db,
+      commerceId,
+      ref.id,
+      userResult.value
+    );
+    if (linkErr) {
+      return jsonError(linkErr, 400);
+    }
+  }
+
+  const batch = db.batch();
+  batch.set(ref, payload);
+  if (userResult.value) {
+    await enqueueUpsertProviderMembership(
+      batch,
+      db,
+      userResult.value,
+      commerceId,
+      ref.id
+    );
+  }
+  await batch.commit();
 
   return NextResponse.json({ staffId: ref.id });
 }

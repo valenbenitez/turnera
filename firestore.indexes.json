@@ -42,6 +42,14 @@
         { "fieldPath": "staffId", "order": "ASCENDING" },
         { "fieldPath": "start", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "commerce_members",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "commerceId", "order": "ASCENDING" },
+        { "fieldPath": "role", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

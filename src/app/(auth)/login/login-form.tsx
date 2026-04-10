@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { auth } from "@/lib/firebase/auth-client";
+import { safeAuthRedirectPath } from "@/lib/safe-auth-redirect";
 
 function mapAuthError(code: string): string {
   switch (code) {
@@ -43,7 +44,7 @@ function mapAuthError(code: string): string {
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const from = searchParams.get("from") || "/dashboard";
+  const from = safeAuthRedirectPath(searchParams.get("from"));
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -56,7 +57,7 @@ export function LoginForm() {
     setPending(true);
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
-      router.replace(from.startsWith("/") ? from : "/dashboard");
+      router.replace(from);
       router.refresh();
     } catch (err: unknown) {
       const code =
@@ -114,7 +115,11 @@ export function LoginForm() {
         </CardContent>
         <CardFooter className="flex flex-col gap-3 border-t-0 sm:flex-row sm:justify-between">
           <Link
-            href="/register"
+            href={
+              from !== "/dashboard"
+                ? `/register?from=${encodeURIComponent(from)}`
+                : "/register"
+            }
             className="text-center text-sm text-muted-foreground underline-offset-4 hover:underline sm:text-left"
           >
             Crear cuenta

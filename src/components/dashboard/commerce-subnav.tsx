@@ -2,13 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
-import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import { useAuth } from "@/contexts/auth-context";
+import { getCommerceMember } from "@/lib/firebase/services";
+import type { CommerceMemberRole } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 type Props = { commerceId: string };
 
-const tabs = [
+const allTabs = [
   {
     href: (id: string) => `/dashboard/${id}/agenda`,
     label: "Agenda",
@@ -37,6 +41,27 @@ const tabs = [
 
 export function CommerceSubnav({ commerceId }: Props) {
   const pathname = usePathname();
+  const { user, loading: authLoading } = useAuth();
+  const [role, setRole] = useState<CommerceMemberRole | null | "pending">(
+    "pending"
+  );
+
+  useEffect(() => {
+    if (authLoading || !user) return;
+    let cancelled = false;
+    (async () => {
+      const m = await getCommerceMember(user.uid, commerceId);
+      if (!cancelled) setRole(m?.role ?? null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user, commerceId]);
+
+  const tabs =
+    role === "provider"
+      ? allTabs.filter((t) => t.label === "Agenda")
+      : [...allTabs];
 
   return (
     <nav
@@ -44,29 +69,39 @@ export function CommerceSubnav({ commerceId }: Props) {
       aria-label="Secciones del comercio"
     >
       <div className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4 py-2 sm:px-6">
-        {tabs.map((tab) => {
-          const href = tab.href(commerceId);
-          const active =
-            tab.match === "exact"
-              ? pathname === href
-              : pathname === href || pathname.startsWith(`${href}/`);
-          return (
-            <Link
-              key={tab.label}
-              href={href}
-              data-tour={tab.tour}
-              className={cn(
-                buttonVariants({
-                  variant: active ? "secondary" : "ghost",
-                  size: "sm",
-                }),
-                "shrink-0 rounded-md"
-              )}
-            >
-              {tab.label}
-            </Link>
-          );
-        })}
+        {role === "pending" ? (
+          <div
+            className="h-9 flex-1 max-w-[6rem] animate-pulse rounded-md bg-muted"
+            aria-hidden
+          />
+        ) : null}
+        {role !== "pending"
+          ? tabs.map((tab) => {
+              const href = tab.href(commerceId);
+              const active =
+                tab.match === "exact"
+                  ? pathname === href
+                  : pathname === href || pathname.startsWith(`${href}/`);
+              return (
+                <Link
+                  key={tab.label}
+                  href={href}
+                  data-tour={tab.tour}
+                  className={cn(
+                    buttonVariants({
+                      variant: active ? "secondary" : "ghost",
+                      size: "sm",
+                    }),
+                    "shrink-0 rounded-md"
+                  )}
+                >
+                  {tab.label === "Agenda" && role === "provider"
+                    ? "Mi agenda"
+                    : tab.label}
+                </Link>
+              );
+            })
+          : null}
       </div>
     </nav>
   );

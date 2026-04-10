@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { DateTime } from "luxon";
 
@@ -83,6 +83,23 @@ export function BookCommerceClient({
     absoluteUrl: string;
   } | null>(null);
 
+  const staffStepRef = useRef<HTMLDivElement>(null);
+  const dayStepRef = useRef<HTMLDivElement>(null);
+  const slotsStepRef = useRef<HTMLDivElement>(null);
+  const customerStepRef = useRef<HTMLDivElement>(null);
+  const prevBookingScroll = useRef({
+    serviceId: "",
+    staffId: "",
+    dateStr: "",
+    selectedSlotIso: "",
+  });
+  const prevSlotsLoading = useRef(false);
+
+  function scrollToRef(el: HTMLElement | null) {
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -131,6 +148,78 @@ export function BookCommerceClient({
   const showStaffStep = Boolean(
     serviceId && staffForService.length > 0 && !staffOk
   );
+
+  useEffect(() => {
+    if (!ctx) return;
+    const p = prevBookingScroll.current;
+    if (serviceId === p.serviceId) return;
+    const prevSvc = p.serviceId;
+    if (prevSvc !== "" && serviceId !== "" && prevSvc !== serviceId) {
+      p.staffId = "";
+      p.dateStr = "";
+      p.selectedSlotIso = "";
+    }
+    p.serviceId = serviceId;
+    if (!serviceId) return;
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (showStaffStep) scrollToRef(staffStepRef.current);
+        else if (staffOk) scrollToRef(dayStepRef.current);
+      });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [ctx, serviceId, showStaffStep, staffOk]);
+
+  useEffect(() => {
+    if (!ctx || !serviceId || !staffId || !staffOk) return;
+    const p = prevBookingScroll.current;
+    if (staffId === p.staffId) return;
+    p.staffId = staffId;
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => scrollToRef(dayStepRef.current));
+    });
+    return () => cancelAnimationFrame(id);
+  }, [ctx, serviceId, staffId, staffOk]);
+
+  useEffect(() => {
+    if (!ctx || !dateStr || !staffOk) return;
+    const p = prevBookingScroll.current;
+    if (dateStr === p.dateStr) return;
+    p.dateStr = dateStr;
+    const t = window.setTimeout(() => scrollToRef(slotsStepRef.current), 120);
+    return () => clearTimeout(t);
+  }, [ctx, dateStr, staffOk]);
+
+  useEffect(() => {
+    if (!dateStr) {
+      prevSlotsLoading.current = slotsLoading;
+      return;
+    }
+    if (slotsLoading) {
+      prevSlotsLoading.current = true;
+      return;
+    }
+    const wasLoading = prevSlotsLoading.current;
+    prevSlotsLoading.current = false;
+    if (wasLoading) {
+      const t = window.setTimeout(() => scrollToRef(slotsStepRef.current), 80);
+      return () => clearTimeout(t);
+    }
+    return undefined;
+  }, [dateStr, slotsLoading, slots.length]);
+
+  useEffect(() => {
+    if (!selectedSlotIso) return;
+    const p = prevBookingScroll.current;
+    if (selectedSlotIso === p.selectedSlotIso) return;
+    p.selectedSlotIso = selectedSlotIso;
+    requestAnimationFrame(() => {
+      scrollToRef(customerStepRef.current);
+      window.setTimeout(() => {
+        document.getElementById("cust-name")?.focus();
+      }, 350);
+    });
+  }, [selectedSlotIso]);
 
   const dateBounds = useMemo(() => {
     if (!ctx) return { min: "", max: "" };
@@ -335,6 +424,7 @@ export function BookCommerceClient({
           </Card>
 
           {showStaffStep ? (
+            <div ref={staffStepRef} className="scroll-mt-8">
             <Card className={glassCard}>
               <CardHeader>
                 <CardTitle className="text-base">2. Prestador</CardTitle>
@@ -359,6 +449,7 @@ export function BookCommerceClient({
                 </Field>
               </CardContent>
             </Card>
+            </div>
           ) : null}
 
           {staffLocked && serviceId && staffOk ? (
@@ -377,6 +468,7 @@ export function BookCommerceClient({
           ) : null}
 
           {serviceId && staffOk ? (
+            <div ref={dayStepRef} className="scroll-mt-8">
             <Card className={glassCard}>
               <CardHeader>
                 <CardTitle className="text-base">Día</CardTitle>
@@ -408,9 +500,11 @@ export function BookCommerceClient({
                 ) : null}
               </CardContent>
             </Card>
+            </div>
           ) : null}
 
           {serviceId && staffOk && dateStr ? (
+            <div ref={slotsStepRef} className="scroll-mt-8">
             <Card className={glassCard}>
               <CardHeader>
                 <CardTitle className="text-base">Horario</CardTitle>
@@ -454,9 +548,11 @@ export function BookCommerceClient({
                 )}
               </CardContent>
             </Card>
+            </div>
           ) : null}
 
           {selectedSlotIso ? (
+            <div ref={customerStepRef} className="scroll-mt-8">
             <Card className={glassCard}>
               <CardHeader>
                 <CardTitle className="text-base">Tus datos</CardTitle>
@@ -509,6 +605,7 @@ export function BookCommerceClient({
                 </Button>
               </CardFooter>
             </Card>
+            </div>
           ) : null}
         </form>
       )}

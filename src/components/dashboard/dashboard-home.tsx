@@ -32,6 +32,19 @@ import { cn } from "@/lib/utils";
 
 type Row = { commerce: Commerce; role: CommerceMemberRole };
 
+function roleLabelEs(role: CommerceMemberRole): string {
+  switch (role) {
+    case "owner":
+      return "Dueño";
+    case "reception":
+      return "Recepción";
+    case "provider":
+      return "Prestador";
+    default:
+      return role;
+  }
+}
+
 export function DashboardHome() {
   const { user } = useAuth();
   const router = useRouter();
@@ -209,8 +222,8 @@ export function DashboardHome() {
                     </CardDescription>
                   </CardHeader>
                   <CardFooter className="mt-auto flex flex-wrap gap-2 border-t-0 pt-0">
-                    <span className="text-xs capitalize text-muted-foreground">
-                      Rol: {role}
+                    <span className="text-xs text-muted-foreground">
+                      Rol: {roleLabelEs(role)}
                     </span>
                     <Link
                       href={`/dashboard/${commerce.id}/agenda`}
@@ -219,7 +232,7 @@ export function DashboardHome() {
                         "ml-auto"
                       )}
                     >
-                      Abrir
+                      {role === "provider" ? "Mi agenda" : "Abrir"}
                     </Link>
                   </CardFooter>
                 </Card>

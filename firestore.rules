@@ -59,5 +59,9 @@ service cloud.firestore {
     match /booking_tokens/{tokenId} {
       allow read, write: if false;
     }
+
+    match /commerce_invites/{inviteId} {
+      allow read, write: if false;
+    }
   }
 }

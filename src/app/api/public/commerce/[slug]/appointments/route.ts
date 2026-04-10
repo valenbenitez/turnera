@@ -16,6 +16,7 @@ import {
   adminGetStaff,
   adminListAppointmentsForStaffDayUtc,
 } from "@/lib/server/public-booking-data";
+import { notifyAfterPublicBooking } from "@/lib/email/booking-notifications";
 import {
   assertCustomerEmail,
   assertCustomerName,
@@ -221,9 +222,28 @@ export async function POST(request: Request, context: Ctx) {
     throw e;
   }
 
+  const managePath = `/book/manage/${token}`;
+
+  try {
+    await notifyAfterPublicBooking({
+      request,
+      commerce,
+      service,
+      staff,
+      customerName: name.trim(),
+      customerEmail: email.trim(),
+      customerPhone: phone.trim().replace(/\s+/g, ""),
+      startMs,
+      endMs,
+      managePath,
+    });
+  } catch (e) {
+    console.error("[turnera/email] notifyAfterPublicBooking", e);
+  }
+
   return NextResponse.json({
     appointmentId: apptRef.id,
     manageToken: token,
-    managePath: `/book/manage/${token}`,
+    managePath,
   });
 }

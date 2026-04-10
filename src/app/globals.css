@@ -137,6 +137,8 @@ html.public-booking-page {
   min-height: 100dvh;
   min-height: 100svh;
   min-height: -webkit-fill-available;
+  /* Fijado al viewport: evita la “costura” horizontal al superar el alto de pantalla */
+  background-attachment: fixed;
   /* Neutro frío B2B: contraste claro con cards blancas, sin pastel llamativo */
   background-color: #e1e6ee;
   background-image:
@@ -165,6 +167,7 @@ html.public-booking-page body {
 }
 
 html.dark.public-booking-page {
+  background-attachment: fixed;
   background-color: #0b0e13;
   background-image:
     linear-gradient(
@@ -187,6 +190,7 @@ html.dark.public-booking-page {
 
 @supports (background: linear-gradient(in oklch, red, blue)) {
   html.public-booking-page {
+    background-attachment: fixed;
     background-color: oklch(0.92 0.018 252);
     background-image:
       linear-gradient(
@@ -216,9 +220,8 @@ html.dark.public-booking-page {
   flex-direction: column;
   width: 100%;
   min-width: 0;
-  min-height: 100dvh;
-  min-height: 100svh;
-  min-height: -webkit-fill-available;
+  /* Solo mínimo inicial: el alto lo define el contenido (evita doble “bloque” con el body) */
+  min-height: 0;
   flex: 1 1 auto;
 }
 

@@ -47,6 +47,8 @@ export function StaffPageClient({ commerceId }: Props) {
   const [nActive, setNActive] = useState(true);
   const [creating, setCreating] = useState(false);
   const [createErr, setCreateErr] = useState<string | null>(null);
+  const [inviteHint, setInviteHint] = useState<string | null>(null);
+  const [receptionInviting, setReceptionInviting] = useState(false);
 
   const canManage = role === "owner" || role === "reception";
 
@@ -122,6 +124,50 @@ export function StaffPageClient({ commerceId }: Props) {
     }
   }
 
+  async function copyReceptionInviteLink() {
+    if (!user || !canManage) return;
+    setInviteHint(null);
+    setReceptionInviting(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/commerces/${commerceId}/invites`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ role: "reception" }),
+      });
+      const data = (await res.json()) as {
+        error?: string;
+        joinUrl?: string;
+        expiresAt?: string;
+      };
+      if (!res.ok) {
+        setInviteHint(data.error || "No se pudo generar el enlace.");
+        return;
+      }
+      if (data.joinUrl) {
+        await navigator.clipboard.writeText(data.joinUrl);
+        const exp = data.expiresAt
+          ? new Date(data.expiresAt).toLocaleString("es-AR", {
+              dateStyle: "short",
+              timeStyle: "short",
+            })
+          : "";
+        setInviteHint(
+          exp
+            ? `Enlace de recepción copiado. Vence el ${exp}.`
+            : "Enlace de recepción copiado al portapapeles."
+        );
+      }
+    } catch {
+      setInviteHint("Error de red.");
+    } finally {
+      setReceptionInviting(false);
+    }
+  }
+
   function toggleNewService(id: string, on: boolean) {
     setNIds((prev) => {
       const next = new Set(prev);
@@ -151,8 +197,38 @@ export function StaffPageClient({ commerceId }: Props) {
         <h1 className="text-xl font-semibold tracking-tight">Equipo</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Prestadores, slug para URL pública y servicios que ofrece cada uno.
+          Podés invitar al equipo con un enlace.
         </p>
       </div>
+
+      {canManage ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Invitar recepción</CardTitle>
+            <CardDescription>
+              Generá un enlace para que alguien se una como recepción o prestador: verá la
+              agenda de todo el equipo. Un solo uso; podés generar otro cuando
+              quieras.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={receptionInviting}
+              onClick={() => void copyReceptionInviteLink()}
+            >
+              {receptionInviting ? "Generando…" : "Copiar enlace de invitación"}
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {inviteHint ? (
+        <p className="text-sm text-muted-foreground" role="status">
+          {inviteHint}
+        </p>
+      ) : null}
 
       {canManage ? (
         <Card>
@@ -232,7 +308,8 @@ export function StaffPageClient({ commerceId }: Props) {
                     autoCapitalize="none"
                   />
                   <FieldDescription>
-                    Lo encontrás en la consola de Firebase Authentication.
+                    Opcional y avanzado: solo si no usás el enlace de invitación.
+                    Lo encontrás en Firebase Authentication.
                   </FieldDescription>
                 </Field>
                 <Field orientation="horizontal">
@@ -268,6 +345,7 @@ export function StaffPageClient({ commerceId }: Props) {
               services={services}
               canManage={canManage}
               onSaved={load}
+              onInviteMessage={setInviteHint}
             />
           </li>
         ))}
@@ -288,6 +366,7 @@ function StaffRow({
   services,
   canManage,
   onSaved,
+  onInviteMessage,
 }: {
   staff: Staff;
   commerceId: string;
@@ -295,6 +374,7 @@ function StaffRow({
   services: Service[];
   canManage: boolean;
   onSaved: () => void;
+  onInviteMessage: (msg: string | null) => void;
 }) {
   const { user } = useAuth();
   const [name, setName] = useState(staff.name);
@@ -304,6 +384,7 @@ function StaffRow({
   const [active, setActive] = useState(staff.active);
   const [err, setErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [inviting, setInviting] = useState(false);
 
   useEffect(() => {
     setName(staff.name);
@@ -357,6 +438,50 @@ function StaffRow({
     }
   }
 
+  async function copyProviderInviteLink() {
+    if (!user || !canManage) return;
+    onInviteMessage(null);
+    setInviting(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/commerces/${commerceId}/invites`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ role: "provider", staffId: staff.id }),
+      });
+      const data = (await res.json()) as {
+        error?: string;
+        joinUrl?: string;
+        expiresAt?: string;
+      };
+      if (!res.ok) {
+        onInviteMessage(data.error || "No se pudo generar el enlace.");
+        return;
+      }
+      if (data.joinUrl) {
+        await navigator.clipboard.writeText(data.joinUrl);
+        const exp = data.expiresAt
+          ? new Date(data.expiresAt).toLocaleString("es-AR", {
+              dateStyle: "short",
+              timeStyle: "short",
+            })
+          : "";
+        onInviteMessage(
+          exp
+            ? `Enlace para ${staff.name} copiado. Vence el ${exp}.`
+            : "Enlace copiado al portapapeles."
+        );
+      }
+    } catch {
+      onInviteMessage("Error de red.");
+    } finally {
+      setInviting(false);
+    }
+  }
+
   function toggle(id: string, on: boolean) {
     setIds((prev) => {
       const next = new Set(prev);
@@ -398,6 +523,24 @@ function StaffRow({
         </CardHeader>
         <CardContent>
           <FieldGroup className="gap-4">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={
+                  inviting || Boolean(staff.userId && staff.userId.length > 0)
+                }
+                title={
+                  staff.userId
+                    ? "Ya hay cuenta vinculada. Quitá el UID para generar un enlace."
+                    : undefined
+                }
+                onClick={() => void copyProviderInviteLink()}
+              >
+                {inviting ? "Generando…" : "Copiar enlace de invitación"}
+              </Button>
+            </div>
             <Field>
               <FieldLabel htmlFor={`st-name-${staff.id}`}>Nombre</FieldLabel>
               <Input
@@ -437,7 +580,7 @@ function StaffRow({
             </Field>
             <Field>
               <FieldLabel htmlFor={`st-uid-${staff.id}`}>
-                UID Firebase (vacío = quitar vínculo)
+                UID manual (opcional)
               </FieldLabel>
               <Input
                 id={`st-uid-${staff.id}`}
@@ -445,7 +588,12 @@ function StaffRow({
                 onChange={(e) => setUserId(e.target.value)}
                 spellCheck={false}
                 autoCapitalize="none"
+                placeholder="Vacío = sin vínculo"
               />
+              <FieldDescription>
+                Solo si necesitás pegar el UID a mano. Preferí el enlace de
+                invitación.
+              </FieldDescription>
             </Field>
             <Field orientation="horizontal">
               <Checkbox

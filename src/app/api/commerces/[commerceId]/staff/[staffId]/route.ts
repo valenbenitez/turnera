@@ -13,6 +13,11 @@ import {
   jsonError,
   requireCatalogManager,
 } from "@/lib/server/catalog-auth";
+import {
+  enqueueRemoveProviderMembershipIfLinked,
+  enqueueUpsertProviderMembership,
+  validateTargetUserCanBeProvider,
+} from "@/lib/server/sync-staff-provider-membership";
 import { verifyServiceIdsBelongToCommerce } from "@/lib/server/verify-services-in-commerce";
 import { getAdminApp } from "@/lib/firebase/admin";
 
@@ -48,6 +53,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   if (snap.data()?.commerceId !== commerceId) {
     return jsonError("Prestador no encontrado", 404);
   }
+
+  const prevUserId =
+    typeof snap.data()?.userId === "string" ? snap.data()!.userId : undefined;
 
   const b = body as Record<string, unknown>;
   const updates: Record<string, unknown> = {};
@@ -88,9 +96,11 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     updates.servicesIds = ids;
   }
 
+  let nextUserIdForLink: string | null | undefined;
   if ("userId" in b) {
     const ur = assertValidOptionalUserId(b.userId);
     if (!ur.ok) return jsonError(ur.error, 400);
+    nextUserIdForLink = ur.value;
     if (ur.value === null) {
       updates.userId = FieldValue.delete();
     } else {
@@ -106,6 +116,47 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return jsonError("No hay cambios", 400);
   }
 
-  await ref.update(updates);
+  const batch = db.batch();
+
+  if ("userId" in b) {
+    if (
+      prevUserId &&
+      (nextUserIdForLink === null ||
+        (typeof nextUserIdForLink === "string" &&
+          nextUserIdForLink !== prevUserId))
+    ) {
+      await enqueueRemoveProviderMembershipIfLinked(
+        batch,
+        db,
+        prevUserId,
+        commerceId,
+        staffId
+      );
+    }
+    if (
+      typeof nextUserIdForLink === "string" &&
+      nextUserIdForLink !== prevUserId
+    ) {
+      const linkErr = await validateTargetUserCanBeProvider(
+        db,
+        commerceId,
+        staffId,
+        nextUserIdForLink
+      );
+      if (linkErr) {
+        return jsonError(linkErr, 400);
+      }
+      await enqueueUpsertProviderMembership(
+        batch,
+        db,
+        nextUserIdForLink,
+        commerceId,
+        staffId
+      );
+    }
+  }
+
+  batch.update(ref, updates);
+  await batch.commit();
   return NextResponse.json({ ok: true });
 }

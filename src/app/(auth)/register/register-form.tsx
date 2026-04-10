@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { auth } from "@/lib/firebase/auth-client";
+import { safeAuthRedirectPath } from "@/lib/safe-auth-redirect";
 
 function mapRegisterError(code: string): string {
   switch (code) {
@@ -38,6 +39,8 @@ function mapRegisterError(code: string): string {
 
 export function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const from = safeAuthRedirectPath(searchParams.get("from"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +52,7 @@ export function RegisterForm() {
     setPending(true);
     try {
       await createUserWithEmailAndPassword(auth, email.trim(), password);
-      router.replace("/dashboard");
+      router.replace(from);
       router.refresh();
     } catch (err: unknown) {
       const code =
@@ -70,7 +73,8 @@ export function RegisterForm() {
       <CardHeader>
         <CardTitle>Crear cuenta</CardTitle>
         <CardDescription>
-          Registrate para administrar comercios y turnos.
+          Registrate para acceder al panel. Si venís de un enlace de invitación,
+          después vas a unirte al comercio automáticamente.
         </CardDescription>
       </CardHeader>
       <form onSubmit={onSubmit}>
@@ -107,7 +111,11 @@ export function RegisterForm() {
         </CardContent>
         <CardFooter className="flex flex-col gap-3 border-t-0 sm:flex-row sm:justify-between">
           <Link
-            href="/login"
+            href={
+              from !== "/dashboard"
+                ? `/login?from=${encodeURIComponent(from)}`
+                : "/login"
+            }
             className="text-center text-sm text-muted-foreground underline-offset-4 hover:underline sm:text-left"
           >
             Ya tengo cuenta

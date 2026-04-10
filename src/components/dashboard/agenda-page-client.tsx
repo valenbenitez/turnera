@@ -3,7 +3,7 @@
 import { DateTime } from "luxon";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -14,11 +14,12 @@ import {
 import {
   Field,
   FieldDescription,
-  FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth-context";
+import { whatsappWebUrlFromContact } from "@/lib/whatsapp-contact";
+import { cn } from "@/lib/utils";
 import {
   getCommerceById,
   getCommerceMember,
@@ -53,6 +54,7 @@ export function AgendaPageClient({ commerceId }: Props) {
   const [actionId, setActionId] = useState<string | null>(null);
 
   const canFilterStaff = role === "owner" || role === "reception";
+  const isProvider = role === "provider";
 
   const timezone = commerce?.timezone ?? "utc";
 
@@ -133,6 +135,25 @@ export function AgendaPageClient({ commerceId }: Props) {
     [timezone]
   );
 
+  const nextDayInfo = useMemo(() => {
+    if (!commerce || !selectedDate) return { can: false as const, iso: null as string | null };
+    const z = commerce.timezone;
+    const cur = DateTime.fromFormat(selectedDate, "yyyy-MM-dd", { zone: z });
+    if (!cur.isValid) return { can: false as const, iso: null as string | null };
+    const next = cur.plus({ days: 1 });
+    const today = DateTime.now().setZone(z).startOf("day");
+    const maxDay = today.plus({ days: commerce.maxDaysInAdvance });
+    const iso = next.toISODate();
+    const can = Boolean(iso && next.startOf("day") <= maxDay);
+    return { can, iso: can && iso ? iso : null };
+  }, [commerce, selectedDate]);
+
+  function goToNextDay() {
+    if (nextDayInfo.can && nextDayInfo.iso) {
+      setSelectedDate(nextDayInfo.iso);
+    }
+  }
+
   async function cancelAppointment(id: string) {
     if (!user) return;
     if (!window.confirm("¿Cancelar este turno? El cliente puede seguir gestionando por el enlace que recibió.")) {
@@ -173,37 +194,41 @@ export function AgendaPageClient({ commerceId }: Props) {
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Agenda</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {isProvider ? "Mi agenda" : "Agenda"}
+        </h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          Turnos del día en la zona horaria del comercio ({timezone}).
+          {isProvider
+            ? `Tus turnos del día (${timezone}).`
+            : `Turnos del día en la zona horaria del comercio (${timezone}).`}
         </p>
       </div>
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Día y filtros</CardTitle>
+          <CardTitle className="text-lg">
+            {canFilterStaff ? "Día y filtros" : "Día"}
+          </CardTitle>
           <CardDescription>
-            Vista pensada para móvil: elegí la fecha y, si aplica, el
-            profesional.
+            {canFilterStaff
+              ? "Vista pensada para móvil: elegí la fecha y, si aplica, el profesional."
+              : "Elegí la fecha para ver tus turnos."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <FieldGroup className="gap-4 sm:flex-row sm:items-end">
-            <Field className="min-w-0 flex-1">
+          <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 sm:items-end">
+            <Field className="min-w-0">
               <FieldLabel htmlFor="agenda-date">Fecha</FieldLabel>
               <Input
                 id="agenda-date"
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full min-w-0"
+                className="h-9 w-full min-w-0"
               />
-              <FieldDescription>
-                Calendario del comercio según su zona horaria.
-              </FieldDescription>
             </Field>
             {canFilterStaff ? (
-              <Field className="min-w-0 flex-1">
+              <Field className="min-w-0">
                 <FieldLabel htmlFor="agenda-staff">Profesional</FieldLabel>
                 <select
                   id="agenda-staff"
@@ -220,16 +245,37 @@ export function AgendaPageClient({ commerceId }: Props) {
                 </select>
               </Field>
             ) : null}
-          </FieldGroup>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            disabled={!selectedDate || loading}
-            onClick={() => void fetchAppointments()}
-          >
-            Actualizar
-          </Button>
+          </div>
+          <FieldDescription>
+            Calendario del comercio según su zona horaria.
+          </FieldDescription>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={!selectedDate || loading}
+              onClick={() => void fetchAppointments()}
+            >
+              Actualizar
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!nextDayInfo.can || loading}
+              title={
+                !commerce
+                  ? undefined
+                  : !nextDayInfo.can
+                    ? `No podés avanzar más allá del ${DateTime.now().setZone(commerce.timezone).plus({ days: commerce.maxDaysInAdvance }).setLocale("es").toFormat("d MMM yyyy")} (límite de reservas del comercio).`
+                    : "Ver la agenda del día siguiente"
+              }
+              onClick={goToNextDay}
+            >
+              Día siguiente
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -248,53 +294,74 @@ export function AgendaPageClient({ commerceId }: Props) {
             No hay turnos para este día.
           </li>
         ) : null}
-        {rows.map((r) => (
-          <li key={r.id}>
-            <Card>
-              <CardContent className="flex flex-col gap-3 pt-6 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0 space-y-1">
-                  <p className="font-medium">
-                    {formatRange(r.start, r.end)}{" "}
-                    <span
-                      className={
-                        r.status === "confirmed"
-                          ? "text-muted-foreground font-normal"
-                          : "text-destructive font-normal"
-                      }
-                    >
-                      ·{" "}
-                      {r.status === "confirmed"
-                        ? "Confirmado"
-                        : r.status === "cancelled"
-                          ? "Cancelado"
-                          : r.status}
-                    </span>
-                  </p>
-                  <p className="text-muted-foreground text-sm">
-                    {r.serviceName} · {r.staffName}
-                  </p>
-                  <p className="text-sm">
-                    {r.customerName}
-                    {r.contact ? ` · ${r.contact}` : ""}
-                    {r.customerEmail ? ` · ${r.customerEmail}` : ""}
-                  </p>
-                </div>
-                {r.status === "confirmed" ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="shrink-0 self-start"
-                    disabled={actionId === r.id}
-                    onClick={() => void cancelAppointment(r.id)}
-                  >
-                    {actionId === r.id ? "Cancelando…" : "Cancelar"}
-                  </Button>
-                ) : null}
-              </CardContent>
-            </Card>
-          </li>
-        ))}
+        {rows.map((r) => {
+          const waUrl =
+            r.status === "confirmed" && r.contact
+              ? whatsappWebUrlFromContact(r.contact)
+              : null;
+          return (
+            <li key={r.id}>
+              <Card>
+                <CardContent className="flex flex-col gap-3 pt-6 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 space-y-1">
+                    <p className="font-medium">
+                      {formatRange(r.start, r.end)}{" "}
+                      <span
+                        className={
+                          r.status === "confirmed"
+                            ? "text-muted-foreground font-normal"
+                            : "text-destructive font-normal"
+                        }
+                      >
+                        ·{" "}
+                        {r.status === "confirmed"
+                          ? "Confirmado"
+                          : r.status === "cancelled"
+                            ? "Cancelado"
+                            : r.status}
+                      </span>
+                    </p>
+                    <p className="text-muted-foreground text-sm">
+                      {r.serviceName} · {r.staffName}
+                    </p>
+                    <p className="text-sm">
+                      {r.customerName}
+                      {r.contact ? ` · ${r.contact}` : ""}
+                      {r.customerEmail ? ` · ${r.customerEmail}` : ""}
+                    </p>
+                  </div>
+                  {r.status === "confirmed" ? (
+                    <div className="flex shrink-0 flex-col gap-2 self-start sm:flex-row sm:items-center">
+                      {waUrl ? (
+                        <a
+                          href={waUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={cn(
+                            buttonVariants({ variant: "secondary", size: "sm" }),
+                            "inline-flex w-full justify-center no-underline sm:w-auto"
+                          )}
+                        >
+                          WhatsApp
+                        </a>
+                      ) : null}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto"
+                        disabled={actionId === r.id}
+                        onClick={() => void cancelAppointment(r.id)}
+                      >
+                        {actionId === r.id ? "Cancelando…" : "Cancelar"}
+                      </Button>
+                    </div>
+                  ) : null}
+                </CardContent>
+              </Card>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
