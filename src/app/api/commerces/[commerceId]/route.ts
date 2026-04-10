@@ -5,6 +5,7 @@ import { getAuth } from "firebase-admin/auth";
 import { getAdminApp } from "@/lib/firebase/admin";
 import {
   isValidTimezoneIANA,
+  normalizeBookingNotifyEmail,
   parseWorkingHours,
   sanitizeWhatsappNumber,
 } from "@/lib/validation/commerce-settings";
@@ -114,6 +115,20 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       return jsonError("Zona horaria no válida", 400);
     }
     updates.timezone = tz;
+  }
+
+  if ("bookingNotifyEmail" in b) {
+    if (b.bookingNotifyEmail === null || b.bookingNotifyEmail === "") {
+      updates.bookingNotifyEmail = FieldValue.delete();
+    } else if (typeof b.bookingNotifyEmail === "string") {
+      const em = normalizeBookingNotifyEmail(b.bookingNotifyEmail);
+      if (!em) {
+        return jsonError("Email de avisos de reserva no válido", 400);
+      }
+      updates.bookingNotifyEmail = em;
+    } else {
+      return jsonError("bookingNotifyEmail inválido", 400);
+    }
   }
 
   if ("whatsappNumber" in b) {

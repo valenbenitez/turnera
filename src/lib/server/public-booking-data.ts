@@ -16,6 +16,10 @@ function mapCommerce(id: string, d: DocumentData): Commerce {
     maxDaysInAdvance: d.maxDaysInAdvance as number,
     minHoursBeforeBooking: d.minHoursBeforeBooking as number,
     whatsappNumber: d.whatsappNumber as string | undefined,
+    bookingNotifyEmail:
+      typeof d.bookingNotifyEmail === "string"
+        ? d.bookingNotifyEmail.trim() || undefined
+        : undefined,
     createdAt: (d.createdAt as Timestamp)?.toDate?.() ?? new Date(),
   };
 }

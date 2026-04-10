@@ -63,6 +63,7 @@ export function CommerceSettingsForm({ commerceId }: Props) {
   const [active, setActive] = useState(true);
   const [timezone, setTimezone] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [bookingNotifyEmail, setBookingNotifyEmail] = useState("");
   const [minHours, setMinHours] = useState(2);
   const [maxDays, setMaxDays] = useState(30);
   const [slotMinutes, setSlotMinutes] = useState(30);
@@ -97,6 +98,7 @@ export function CommerceSettingsForm({ commerceId }: Props) {
       setActive(c.active);
       setTimezone(c.timezone);
       setWhatsapp(c.whatsappNumber ?? "");
+      setBookingNotifyEmail(c.bookingNotifyEmail ?? "");
       setMinHours(c.minHoursBeforeBooking);
       setMaxDays(c.maxDaysInAdvance);
       setSlotMinutes(c.slotDurationMinutes);
@@ -141,6 +143,7 @@ export function CommerceSettingsForm({ commerceId }: Props) {
           active,
           timezone: timezone.trim(),
           whatsappNumber: whatsapp.trim() || null,
+          bookingNotifyEmail: bookingNotifyEmail.trim() || null,
           minHoursBeforeBooking: minHours,
           maxDaysInAdvance: maxDays,
           slotDurationMinutes: slotMinutes,
@@ -318,6 +321,24 @@ export function CommerceSettingsForm({ commerceId }: Props) {
                 />
                 <FieldDescription>
                   Dejalo vacío para quitar. Formato con código de país.
+                </FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="settings-notify-email">
+                  Email para avisos de nueva reserva
+                </FieldLabel>
+                <Input
+                  id="settings-notify-email"
+                  type="email"
+                  autoComplete="email"
+                  value={bookingNotifyEmail}
+                  onChange={(ev) => setBookingNotifyEmail(ev.target.value)}
+                  placeholder="recepcion@ejemplo.com"
+                />
+                <FieldDescription>
+                  Te avisamos por Resend cuando alguien reserve por la web. Si lo
+                  dejás vacío, usamos el email de tu cuenta de dueño (perfil de
+                  usuario).
                 </FieldDescription>
               </Field>
               <div className="grid gap-4 sm:grid-cols-3">

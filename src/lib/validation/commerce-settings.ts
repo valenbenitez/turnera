@@ -100,3 +100,13 @@ export function parseWorkingHours(raw: unknown): WorkingHours | null {
   return out;
 }
 
+const BOOKING_NOTIFY_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Email para avisos de reserva; `null` si el string está vacío o no es válido. */
+export function normalizeBookingNotifyEmail(raw: string): string | null {
+  const t = raw.trim().toLowerCase();
+  if (!t) return null;
+  if (t.length > 254 || !BOOKING_NOTIFY_EMAIL_RE.test(t)) return null;
+  return t;
+}
+

@@ -46,6 +46,10 @@ export interface Commerce {
   maxDaysInAdvance: number;
   minHoursBeforeBooking: number;
   whatsappNumber?: string;
+  /**
+   * Email para avisos de nueva reserva (público). Si falta, se usa el del primer owner en `commerce_members`.
+   */
+  bookingNotifyEmail?: string;
   createdAt: Date;
 }
 
