@@ -54,3 +54,4 @@ Next.js app con:
 - **Documentá el progreso en Notion mientras trabajás.**
 - **Si no sabés algo, buscá en `docs/` antes de inventarlo.**
 - **No edités código fuera del scope de la tarea actual.**
+- **Siempre utiliza la skill vercel-react-best-practices para crear componentes nuevos.**
