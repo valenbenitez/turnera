@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Loader2, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -179,7 +180,22 @@ export function StaffPageClient({ commerceId }: Props) {
 
   if (!user || !ready) {
     return (
-      <p className="px-4 py-6 text-sm text-muted-foreground">Cargando…</p>
+      <div className="mx-auto max-w-3xl space-y-6 px-4 py-8" aria-busy="true">
+        <div className="space-y-2">
+          <div className="h-7 w-32 animate-pulse rounded-md bg-muted" />
+          <div className="h-4 w-full max-w-lg animate-pulse rounded-md bg-muted" />
+        </div>
+        <Card>
+          <CardHeader className="space-y-2">
+            <div className="h-5 w-56 animate-pulse rounded-md bg-muted" />
+            <div className="h-16 animate-pulse rounded-md bg-muted" />
+          </CardHeader>
+        </Card>
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" aria-hidden />
+          Cargando equipo…
+        </p>
+      </div>
     );
   }
 
@@ -194,10 +210,10 @@ export function StaffPageClient({ commerceId }: Props) {
   return (
     <div className="mx-auto max-w-3xl space-y-8 px-4 py-8">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Equipo</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Prestadores, slug para URL pública y servicios que ofrece cada uno.
-          Podés invitar al equipo con un enlace.
+        <h1 className="text-2xl font-semibold tracking-tight">Equipo</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          Prestadores, link personal de reserva y servicios que ofrece cada uno.
+          Invitá recepción o prestadores con enlaces de un solo uso.
         </p>
       </div>
 
@@ -351,9 +367,21 @@ export function StaffPageClient({ commerceId }: Props) {
         ))}
       </ul>
       {staff.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          No hay prestadores todavía.
-        </p>
+        <Card className="border-dashed bg-muted/20">
+          <CardContent className="flex flex-col items-center gap-3 py-10 text-center sm:flex-row sm:text-left">
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+              <Users className="size-6" aria-hidden />
+            </span>
+            <div className="space-y-1">
+              <p className="font-medium">Todavía no hay prestadores cargados</p>
+              <p className="text-sm text-muted-foreground">
+                {canManage
+                  ? "Creá el primero con el formulario de arriba o compartí el enlace de invitación para recepción."
+                  : "Cuando el equipo esté dado de alta, vas a ver acá a cada prestador y su link de reserva."}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       ) : null}
     </div>
   );

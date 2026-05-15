@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { CalendarDays, Package, Settings, Users } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
@@ -16,24 +17,28 @@ const allTabs = [
   {
     href: (id: string) => `/dashboard/${id}/agenda`,
     label: "Agenda",
+    Icon: CalendarDays,
     match: "prefix" as const,
     tour: "tour-nav-agenda",
   },
   {
     href: (id: string) => `/dashboard/${id}`,
     label: "Ajustes",
+    Icon: Settings,
     match: "exact" as const,
     tour: "tour-nav-settings",
   },
   {
     href: (id: string) => `/dashboard/${id}/services`,
     label: "Servicios",
+    Icon: Package,
     match: "prefix" as const,
     tour: "tour-nav-services",
   },
   {
     href: (id: string) => `/dashboard/${id}/staff`,
     label: "Equipo",
+    Icon: Users,
     match: "prefix" as const,
     tour: "tour-nav-staff",
   },
@@ -82,6 +87,11 @@ export function CommerceSubnav({ commerceId }: Props) {
                 tab.match === "exact"
                   ? pathname === href
                   : pathname === href || pathname.startsWith(`${href}/`);
+              const label =
+                tab.label === "Agenda" && role === "provider"
+                  ? "Mi agenda"
+                  : tab.label;
+              const Icon = tab.Icon;
               return (
                 <Link
                   key={tab.label}
@@ -92,12 +102,12 @@ export function CommerceSubnav({ commerceId }: Props) {
                       variant: active ? "secondary" : "ghost",
                       size: "sm",
                     }),
-                    "shrink-0 rounded-md"
+                    "shrink-0 gap-2 rounded-md",
+                    active && "ring-1 ring-border"
                   )}
                 >
-                  {tab.label === "Agenda" && role === "provider"
-                    ? "Mi agenda"
-                    : tab.label}
+                  <Icon className="size-4 shrink-0 opacity-80" aria-hidden />
+                  <span>{label}</span>
                 </Link>
               );
             })

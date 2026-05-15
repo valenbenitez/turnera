@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 import { useAuth } from "@/contexts/auth-context";
 import { getCommerceMember } from "@/lib/firebase/services";
@@ -38,7 +39,13 @@ export function CommerceAccessGate({ commerceId, children }: Props) {
 
   if (authLoading || allowed === null) {
     return (
-      <div className="flex min-h-[40vh] flex-1 flex-col items-center justify-center px-4">
+      <div
+        className="flex min-h-[40vh] flex-1 flex-col items-center justify-center gap-3 px-4"
+        role="status"
+        aria-live="polite"
+        aria-busy="true"
+      >
+        <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
         <p className="text-sm text-muted-foreground">Comprobando acceso…</p>
       </div>
     );

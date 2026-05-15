@@ -74,19 +74,17 @@ export function CommerceOnboardingTour({
   startFromQuery,
 }: Props) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [step, setStep] = useState(0);
-
   const storageKey = `${STORAGE_PREFIX}${commerceId}`;
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const done = localStorage.getItem(storageKey) === "1";
-    if (startFromQuery && !done) {
-      setOpen(true);
-      setStep(0);
+  const [open, setOpen] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const done = localStorage.getItem(storageKey) === "1";
+      return startFromQuery && !done;
+    } catch {
+      return false;
     }
-  }, [startFromQuery, storageKey]);
+  });
+  const [step, setStep] = useState(0);
 
   const clearHighlight = useCallback(() => {
     document

@@ -2,6 +2,7 @@
 
 import { DateTime } from "luxon";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { CalendarOff, Loader2 } from "lucide-react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -287,11 +288,38 @@ export function AgendaPageClient({ commerceId }: Props) {
 
       <ul className="space-y-3">
         {loading && rows.length === 0 ? (
-          <li className="text-muted-foreground text-sm">Cargando…</li>
+          <li className="space-y-3" aria-busy="true" aria-live="polite">
+            {[0, 1, 2].map((i) => (
+              <Card key={i} className="overflow-hidden">
+                <CardContent className="flex flex-col gap-3 pt-6">
+                  <div className="h-4 w-32 animate-pulse rounded bg-muted" />
+                  <div className="h-3 w-full max-w-md animate-pulse rounded bg-muted" />
+                  <div className="h-3 w-[75%] max-w-sm animate-pulse rounded bg-muted" />
+                </CardContent>
+              </Card>
+            ))}
+            <p className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
+              Cargando turnos…
+            </p>
+          </li>
         ) : null}
         {!loading && rows.length === 0 ? (
-          <li className="text-muted-foreground text-sm">
-            No hay turnos para este día.
+          <li>
+            <Card className="border-dashed bg-muted/20">
+              <CardContent className="flex flex-col items-center gap-2 py-10 text-center sm:flex-row sm:text-left">
+                <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                  <CalendarOff className="size-6" aria-hidden />
+                </span>
+                <div className="space-y-1">
+                  <p className="font-medium">No hay turnos este día</p>
+                  <p className="text-sm text-muted-foreground">
+                    Probá otra fecha o tocá &quot;Actualizar&quot; por si acaba de
+                    reservar alguien.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </li>
         ) : null}
         {rows.map((r) => {

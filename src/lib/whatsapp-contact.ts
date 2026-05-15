@@ -8,7 +8,7 @@ export function whatsappWebUrlFromContact(contact: string): string | null {
   const digits = raw.replace(/\D/g, "");
   if (digits.length < 8) return null;
 
-  let n = digits.replace(/^0+/, "");
+  const n = digits.replace(/^0+/, "");
   if (n.length < 8) return null;
 
   if (n.startsWith("54")) {

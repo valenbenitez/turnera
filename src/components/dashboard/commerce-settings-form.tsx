@@ -165,7 +165,23 @@ export function CommerceSettingsForm({ commerceId }: Props) {
 
   if (!user || (!ready && !loadError)) {
     return (
-      <p className="text-sm text-muted-foreground">Cargando configuración…</p>
+      <div className="space-y-6" aria-busy="true" aria-live="polite">
+        <div className="space-y-2">
+          <div className="h-8 w-48 max-w-full animate-pulse rounded-md bg-muted" />
+          <div className="h-4 w-64 max-w-full animate-pulse rounded-md bg-muted" />
+        </div>
+        <Card>
+          <CardHeader className="space-y-2">
+            <div className="h-5 w-32 animate-pulse rounded-md bg-muted" />
+            <div className="h-3 w-full max-w-md animate-pulse rounded-md bg-muted" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
+            <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
+          </CardContent>
+        </Card>
+        <p className="text-sm text-muted-foreground">Cargando configuración…</p>
+      </div>
     );
   }
 
@@ -179,7 +195,15 @@ export function CommerceSettingsForm({ commerceId }: Props) {
 
   if (!commerce || workingHours === null || workingHours === undefined) {
     return (
-      <p className="text-sm text-muted-foreground">Cargando configuración…</p>
+      <div className="space-y-6" aria-busy="true">
+        <div className="h-8 w-48 animate-pulse rounded-md bg-muted" />
+        <Card>
+          <CardHeader>
+            <div className="h-5 w-40 animate-pulse rounded-md bg-muted" />
+          </CardHeader>
+        </Card>
+        <p className="text-sm text-muted-foreground">Cargando configuración…</p>
+      </div>
     );
   }
 
@@ -217,7 +241,7 @@ export function CommerceSettingsForm({ commerceId }: Props) {
     <div className="space-y-8">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight">
             {commerce.name}
           </h1>
           <p className="mt-1 font-mono text-xs text-muted-foreground">

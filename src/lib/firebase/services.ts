@@ -1,5 +1,5 @@
 import { db } from './config';
-import { collection, doc, getDoc, getDocs, query, where, addDoc, Timestamp, runTransaction } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, where, Timestamp, runTransaction } from 'firebase/firestore';
 import type { Commerce, CommerceMember, Service, Staff, Appointment } from '@/lib/types';
 import { commerceMemberDocId } from '@/lib/commerce-member-id';
 

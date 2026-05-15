@@ -1,7 +1,7 @@
 "use client";
 
 import { DateTime } from "luxon";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -21,7 +21,7 @@ function parseYmd(s: string, zone: string): DateTime | null {
   return d.isValid ? d : null;
 }
 
-export function BookingMonthCalendar({
+function BookingMonthCalendarInner({
   timezone,
   minDate,
   maxDate,
@@ -39,12 +39,6 @@ export function BookingMonthCalendar({
     DateTime.now().setZone(timezone).startOf("day");
 
   const [cursor, setCursor] = useState(() => base.startOf("month"));
-
-  useEffect(() => {
-    if (selected?.isValid) {
-      setCursor(selected.startOf("month"));
-    }
-  }, [value, timezone]);
 
   const monthStart = cursor.startOf("month");
   const label = monthStart.setLocale("es").toFormat("LLLL yyyy");
@@ -137,5 +131,15 @@ export function BookingMonthCalendar({
         })}
       </div>
     </div>
+  );
+}
+
+/** Remonta el estado del mes cuando cambian `value` o `timezone` (sin setState en effects). */
+export function BookingMonthCalendar(props: Props) {
+  return (
+    <BookingMonthCalendarInner
+      key={`${props.value}|${props.timezone}`}
+      {...props}
+    />
   );
 }

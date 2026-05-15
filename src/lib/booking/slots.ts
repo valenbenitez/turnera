@@ -67,13 +67,13 @@ export function buildAvailableSlotStartsUtc(input: BuildSlotsInput): number[] {
   const { h: sh, m: sm } = parseHm(sched.start);
   const { h: eh, m: em } = parseHm(sched.end);
   const dayBase = selectedDay.startOf("day");
-  let open = dayBase.set({
+  const open = dayBase.set({
     hour: sh,
     minute: sm,
     second: 0,
     millisecond: 0,
   });
-  let close = dayBase.set({
+  const close = dayBase.set({
     hour: eh,
     minute: em,
     second: 0,
