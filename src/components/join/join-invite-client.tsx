@@ -15,6 +15,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  JOIN_INVITE_STEPS,
+  joinInvitePostAuthHint,
+  joinInviteRoleSummary,
+} from "@/lib/dashboard/staff-invite-flow";
 import { auth } from "@/lib/firebase/auth-client";
 import { cn } from "@/lib/utils";
 
@@ -77,13 +82,6 @@ export function JoinInviteClient({ token }: Props) {
       cancelled = true;
     };
   }, [token]);
-
-  const roleDescription = useCallback((p: Preview) => {
-    if (p.role === "reception") {
-      return "Te invitan como recepción: vas a poder ver la agenda de todo el equipo y gestionar turnos.";
-    }
-    return `Te invitan como prestador (${p.staffName ?? "tu perfil"}): vas a ver solo tu agenda en este comercio.`;
-  }, []);
 
   const redeem = useCallback(async () => {
     if (!user) return;
@@ -174,22 +172,28 @@ export function JoinInviteClient({ token }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Unirte al comercio</CardTitle>
+        <CardTitle>Invitación al panel</CardTitle>
         <CardDescription>
           <span className="font-medium text-foreground">{preview.commerceName}</span>
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3 text-sm text-muted-foreground">
-        <p>{roleDescription(preview)}</p>
+      <CardContent className="space-y-4 text-sm text-muted-foreground">
+        <p className="text-foreground">{joinInviteRoleSummary(preview)}</p>
+        <ol className="list-decimal space-y-1.5 pl-4">
+          {JOIN_INVITE_STEPS.map((step) => (
+            <li key={step}>{step}</li>
+          ))}
+        </ol>
         {!user ? (
-          <p>Para continuar, creá una cuenta o iniciá sesión con el mismo email.</p>
+          <p>Elegí una opción abajo. Usá el mismo email que vas a usar en el panel.</p>
         ) : (
           <>
             <p>
               Sesión: <span className="font-mono text-xs">{user.email}</span>
             </p>
+            <p>{joinInvitePostAuthHint(preview.role)}</p>
             {redeeming ? (
-              <p className="text-foreground">
+              <p className="font-medium text-foreground">
                 Vinculando tu cuenta con {preview.commerceName}…
               </p>
             ) : null}
@@ -211,7 +215,7 @@ export function JoinInviteClient({ token }: Props) {
                 "inline-flex w-full justify-center sm:w-auto"
               )}
             >
-              Crear cuenta
+              Crear cuenta y unirme
             </Link>
             <Link
               href={loginHref}
@@ -220,7 +224,7 @@ export function JoinInviteClient({ token }: Props) {
                 "inline-flex w-full justify-center sm:w-auto"
               )}
             >
-              Ya tengo cuenta
+              Iniciar sesión y unirme
             </Link>
           </>
         ) : (

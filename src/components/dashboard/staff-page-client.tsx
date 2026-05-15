@@ -28,6 +28,13 @@ import {
   listAllServicesByCommerce,
   listAllStaffByCommerce,
 } from "@/lib/firebase/services";
+import {
+  formatInviteCopiedMessage,
+  OWNER_PROVIDER_FLOW,
+  OWNER_RECEPTION_FLOW,
+  providerInviteDisabledReason,
+  type StaffFlowSection,
+} from "@/lib/dashboard/staff-invite-flow";
 import type { CommerceMemberRole, Service, Staff } from "@/lib/types";
 
 type Props = { commerceId: string };
@@ -150,16 +157,11 @@ export function StaffPageClient({ commerceId }: Props) {
       }
       if (data.joinUrl) {
         await navigator.clipboard.writeText(data.joinUrl);
-        const exp = data.expiresAt
-          ? new Date(data.expiresAt).toLocaleString("es-AR", {
-              dateStyle: "short",
-              timeStyle: "short",
-            })
-          : "";
         setInviteHint(
-          exp
-            ? `Enlace de recepción copiado. Vence el ${exp}.`
-            : "Enlace de recepción copiado al portapapeles."
+          formatInviteCopiedMessage({
+            role: "reception",
+            expiresAt: data.expiresAt,
+          })
         );
       }
     } catch {
@@ -212,19 +214,33 @@ export function StaffPageClient({ commerceId }: Props) {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Equipo</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          Prestadores, link personal de reserva y servicios que ofrece cada uno.
-          Invitá recepción o prestadores con enlaces de un solo uso.
+          Cada prestador tiene su link de reserva pública. Para que accedan al panel,
+          compartí un enlace de invitación. La recepción ve la agenda de todo el equipo.
         </p>
       </div>
+
+      {canManage ? (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="text-base">Cómo agregar al equipo</CardTitle>
+            <CardDescription>
+              Dos roles distintos: prestador (su agenda) y recepción (agenda completa).
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-6 sm:grid-cols-2">
+            <StaffFlowSteps section={OWNER_PROVIDER_FLOW} />
+            <StaffFlowSteps section={OWNER_RECEPTION_FLOW} />
+          </CardContent>
+        </Card>
+      ) : null}
 
       {canManage ? (
         <Card>
           <CardHeader>
             <CardTitle>Invitar recepción</CardTitle>
             <CardDescription>
-              Generá un enlace para que alguien se una como recepción o prestador: verá la
-              agenda de todo el equipo. Un solo uso; podés generar otro cuando
-              quieras.
+              Enlace de un solo uso para quien coordina turnos en el mostrador. Si vence o
+              se usa, generá otro.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -234,7 +250,7 @@ export function StaffPageClient({ commerceId }: Props) {
               disabled={receptionInviting}
               onClick={() => void copyReceptionInviteLink()}
             >
-              {receptionInviting ? "Generando…" : "Copiar enlace de invitación"}
+              {receptionInviting ? "Generando…" : "Copiar enlace para recepción"}
             </Button>
           </CardContent>
         </Card>
@@ -251,7 +267,8 @@ export function StaffPageClient({ commerceId }: Props) {
           <CardHeader>
             <CardTitle>Nuevo prestador</CardTitle>
             <CardDescription>
-              URL pública:{" "}
+              Paso 1 del flujo de prestador: creá el perfil. Después copiá su enlace de
+              invitación en la lista. Reserva pública:{" "}
               <span className="font-mono text-xs">
                 /book/{commerceSlug || "…"}/tu-slug
               </span>
@@ -311,23 +328,26 @@ export function StaffPageClient({ commerceId }: Props) {
                     </ul>
                   )}
                 </Field>
-                <Field>
-                  <FieldLabel htmlFor="st-new-uid">
-                    UID de Firebase (opcional)
-                  </FieldLabel>
-                  <Input
-                    id="st-new-uid"
-                    value={nUserId}
-                    onChange={(e) => setNUserId(e.target.value)}
-                    placeholder="Para vincular cuenta del prestador"
-                    spellCheck={false}
-                    autoCapitalize="none"
-                  />
-                  <FieldDescription>
-                    Opcional y avanzado: solo si no usás el enlace de invitación.
-                    Lo encontrás en Firebase Authentication.
-                  </FieldDescription>
-                </Field>
+                <details className="rounded-lg border border-border/80 p-3 text-sm">
+                  <summary className="cursor-pointer font-medium text-foreground">
+                    Opciones avanzadas (vincular UID manual)
+                  </summary>
+                  <Field className="mt-3">
+                    <FieldLabel htmlFor="st-new-uid">UID de Firebase</FieldLabel>
+                    <Input
+                      id="st-new-uid"
+                      value={nUserId}
+                      onChange={(e) => setNUserId(e.target.value)}
+                      placeholder="Solo si no usás invitación por enlace"
+                      spellCheck={false}
+                      autoCapitalize="none"
+                    />
+                    <FieldDescription>
+                      Recomendado: usar el enlace de invitación en la tarjeta del
+                      prestador. El UID manual es para casos excepcionales.
+                    </FieldDescription>
+                  </Field>
+                </details>
                 <Field orientation="horizontal">
                   <Checkbox
                     checked={nActive}
@@ -376,7 +396,7 @@ export function StaffPageClient({ commerceId }: Props) {
               <p className="font-medium">Todavía no hay prestadores cargados</p>
               <p className="text-sm text-muted-foreground">
                 {canManage
-                  ? "Creá el primero con el formulario de arriba o compartí el enlace de invitación para recepción."
+                  ? "Creá el primero con el formulario de arriba y compartí su enlace de invitación, o sumá recepción con el botón correspondiente."
                   : "Cuando el equipo esté dado de alta, vas a ver acá a cada prestador y su link de reserva."}
               </p>
             </div>
@@ -491,16 +511,12 @@ function StaffRow({
       }
       if (data.joinUrl) {
         await navigator.clipboard.writeText(data.joinUrl);
-        const exp = data.expiresAt
-          ? new Date(data.expiresAt).toLocaleString("es-AR", {
-              dateStyle: "short",
-              timeStyle: "short",
-            })
-          : "";
         onInviteMessage(
-          exp
-            ? `Enlace para ${staff.name} copiado. Vence el ${exp}.`
-            : "Enlace copiado al portapapeles."
+          formatInviteCopiedMessage({
+            role: "provider",
+            staffName: staff.name,
+            expiresAt: data.expiresAt,
+          })
         );
       }
     } catch {
@@ -551,19 +567,18 @@ function StaffRow({
         </CardHeader>
         <CardContent>
           <FieldGroup className="gap-4">
-            <div className="flex flex-wrap gap-2">
+            <div className="space-y-2 rounded-lg border border-dashed border-border/80 bg-muted/30 p-3">
+              <p className="text-sm font-medium">Acceso al panel</p>
+              <p className="text-xs text-muted-foreground">
+                Compartí este enlace para que {name.trim() || "el prestador"} entre al
+                dashboard con su cuenta.
+              </p>
               <Button
                 type="button"
                 variant="secondary"
                 size="sm"
-                disabled={
-                  inviting || Boolean(staff.userId && staff.userId.length > 0)
-                }
-                title={
-                  staff.userId
-                    ? "Ya hay cuenta vinculada. Quitá el UID para generar un enlace."
-                    : undefined
-                }
+                disabled={inviting || providerInviteDisabledReason(staff) !== null}
+                title={providerInviteDisabledReason(staff) ?? undefined}
                 onClick={() => void copyProviderInviteLink()}
               >
                 {inviting ? "Generando…" : "Copiar enlace de invitación"}
@@ -606,23 +621,26 @@ function StaffRow({
                 ))}
               </ul>
             </Field>
-            <Field>
-              <FieldLabel htmlFor={`st-uid-${staff.id}`}>
-                UID manual (opcional)
-              </FieldLabel>
-              <Input
-                id={`st-uid-${staff.id}`}
-                value={userId}
-                onChange={(e) => setUserId(e.target.value)}
-                spellCheck={false}
-                autoCapitalize="none"
-                placeholder="Vacío = sin vínculo"
-              />
-              <FieldDescription>
-                Solo si necesitás pegar el UID a mano. Preferí el enlace de
-                invitación.
-              </FieldDescription>
-            </Field>
+            <details className="rounded-lg border border-border/80 p-3 text-sm">
+              <summary className="cursor-pointer font-medium text-foreground">
+                Opciones avanzadas (UID manual)
+              </summary>
+              <Field className="mt-3">
+                <FieldLabel htmlFor={`st-uid-${staff.id}`}>UID de Firebase</FieldLabel>
+                <Input
+                  id={`st-uid-${staff.id}`}
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
+                  spellCheck={false}
+                  autoCapitalize="none"
+                  placeholder="Vacío = usar invitación por enlace"
+                />
+                <FieldDescription>
+                  Preferí el enlace de invitación de arriba. El UID es para casos
+                  excepcionales.
+                </FieldDescription>
+              </Field>
+            </details>
             <Field orientation="horizontal">
               <Checkbox
                 checked={active}
@@ -640,5 +658,18 @@ function StaffRow({
         </CardFooter>
       </form>
     </Card>
+  );
+}
+
+function StaffFlowSteps({ section }: { section: StaffFlowSection }) {
+  return (
+    <div>
+      <h3 className="text-sm font-semibold">{section.title}</h3>
+      <ol className="mt-2 list-decimal space-y-1.5 pl-4 text-sm text-muted-foreground">
+        {section.steps.map((step) => (
+          <li key={step}>{step}</li>
+        ))}
+      </ol>
+    </div>
   );
 }

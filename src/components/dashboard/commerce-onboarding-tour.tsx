@@ -48,7 +48,7 @@ const STEPS: Step[] = [
   },
   {
     title: "Equipo",
-    body: "Agregá prestadores y vinculá servicios para que aparezcan en la reserva pública.",
+    body: "Creá prestadores, copiá su enlace de invitación y sumá recepción si necesitás. Así acceden al panel con el rol correcto.",
     target: "tour-nav-staff",
   },
   {

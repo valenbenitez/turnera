@@ -3,7 +3,7 @@ Este repo usa **Notion** para gestionar tareas y registrar el progreso de sesió
 ## Base de tareas
 Cada tarea está en la base de Notion con su estado (`pending` / `in_progress` / `done` / `blocked`),
 criterios de aceptación y repo asociado.
-🔗 **[Abrir base de tareas en Notion](URL_DE_TU_BASE_DE_NOTION)**
+🔗 **[Abrir base de tareas en Notion](https://www.notion.so/3610132398da804fb715ce9ed9d719fd?v=3610132398da80fba63e000cd6a6008c)**
 > Si estás en Cursor con MCP de Notion configurado, podés consultar esta base
 > usando el MCP tool. Pedí "mostrame las tareas pendientes" o "cambiá la tarea
 > #7 a in_progress".
