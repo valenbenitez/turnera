@@ -5,6 +5,8 @@ import Link from "next/link";
 import { DateTime } from "luxon";
 
 import { BookingMonthCalendar } from "@/components/booking/booking-month-calendar";
+import { BookingStepper, getBookingStep } from "@/components/booking/booking-stepper";
+import { BookingSummaryBar } from "@/components/booking/booking-summary-bar";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -393,7 +395,35 @@ export function BookCommerceClient({
           </CardFooter>
         </Card>
       ) : (
-        <form onSubmit={onSubmit} className="booking-stack space-y-5">
+        <>
+          <BookingStepper
+            currentStep={getBookingStep(
+              serviceId,
+              showStaffStep,
+              staffId,
+              staffOk,
+              dateStr,
+              selectedSlotIso
+            )}
+            className="mb-4"
+          />
+          <BookingSummaryBar
+            serviceName={
+              serviceId
+                ? ctx.services.find((s) => s.id === serviceId)?.name ?? null
+                : null
+            }
+            staffName={
+              staffId
+                ? ctx.staff.find((s) => s.id === staffId)?.name ?? null
+                : null
+            }
+            dateStr={dateStr || null}
+            selectedSlotIso={selectedSlotIso || null}
+            timezone={commerce.timezone}
+            className="mb-4"
+          />
+          <form onSubmit={onSubmit} className="booking-stack space-y-5">
           <Card className={glassCard}>
             <CardHeader>
               <CardTitle className="text-base">1. Servicio</CardTitle>
@@ -607,7 +637,8 @@ export function BookCommerceClient({
             </Card>
             </div>
           ) : null}
-        </form>
+          </form>
+        </>
       )}
     </div>
   );

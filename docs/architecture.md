@@ -9,7 +9,7 @@
    Frontend ejemplo: `app/` (rutas) → `components/` (UI) → `services/` (API) → `models/` (tipos)
    Backend ejemplo: `src/modules/` (dominios Nest) → `src/providers/` (adaptadores externos)
 
-2.**Sin dependencias superfluas.** Cada dependencia externa está justificada.
+2.**Sin dependencias de mas.** Cada dependencia externa está justificada.
    Si una tarea requiere una nueva, se discute antes.
 
 3.**Errores explícitos.** Las funciones que pueden fallar lanzan excepciones

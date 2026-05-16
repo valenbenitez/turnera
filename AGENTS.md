@@ -24,7 +24,7 @@ comerciales gestionan sus turnos, clientes reservan via link público.
 
 1. Ejecutá `./init.sh` y verificá que termina sin errores. Si falla, pará.
 2. Leé `docs/TASKS.md` para ver las tareas (link a Notion).
-3. Conectate a Notion vía MCP, tomá una tarea pending, cambiá a in_progress.
+3. Conectate a Notion vía MCP.
 4. Creá una página de sesión en Notion para documentar el progreso.
 
 ### Durante la sesión
@@ -50,7 +50,7 @@ Next.js app con:
 ## 5. Reglas duras
 
 - **Una tarea a la vez.** No mezcles cambios.
-- **No declarations una tarea `done` sin `./init.sh` verde.**
+- **No declares una tarea `done` sin `./init.sh` verde.**
 - **Documentá el progreso en Notion mientras trabajás.**
 - **Si no sabés algo, buscá en `docs/` antes de inventarlo.**
 - **No edités código fuera del scope de la tarea actual.**
